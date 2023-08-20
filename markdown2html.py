@@ -1,37 +1,51 @@
 #!/usr/bin/python3
 """
-script that takes 2 arguments
+A script that converts Markdown to HTML.
 """
+
 import sys
-from os import path
+import os
 import re
 
+def convert_markdown_to_html(input_file, output_file):
+    """
+    Converts a Markdown file to HTML and writes the output to a file.
+    """
+    # Check that the Markdown file exists and is a file
+    if not (os.path.exists(input_file) and os.path.isfile(input_file)):
+        print(f"Missing {input_file}", file=sys.stderr)
+        sys.exit(1)
+
+    # Read the Markdown file and convertt it to HTML
+    with open(input_file, encoding="utf-8") as f:
+        html_lines = []
+        for line in f:
+            # Check for Markdown headings
+            match = re.match(r"^(#+) (.*)$", line)
+            if match:
+                heading_level = len(match.group(1))
+                heading_text = match.group(2)
+                html_lines.append(f"<h{heading_level}>{heading_text}</h{heading_level}>")
+            else:
+                html_lines.append(line.rstrip())
+
+    # Write the HTML output to a file
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(html_lines))
 
 if __name__ == "__main__":
-    """
-    a function that turns markdown to html 
-    """
-    if len(sys.argv) < 3:
-        sys.stderr.write("Usage: ./markdown2html.py README.md README.html\n")
+    # Check that the correct number of arguments were provided
+    if len(sys.argv) != 3:
+        print("Usage: ./markdown2html.py <input_file> <output_file>", file=sys.stderr)
         sys.exit(1)
-    elif not path.exists(sys.argv[1]) or not sys.argv[1].endswith('.md'):
-        sys.stderr.write("Missing {}\n".format(sys.argv[1]))
-        sys.exit(1)
-    else:
-        html = []
-        with open(sys.argv[1], 'r') as file:
-            text = file.readlines()
-            text[-1] = text[-1].replace('\n', '')
 
-        with open(sys.argv[2], 'w') as file:
-            for string in text:
-                # convert (#) to html headings (h1 - h6)
-                count = string.count('#')
-                if count != 0:
-                    html_replace = string.replace('#' * count + ' ', '')
-                    html_replace = html_replace.replace('\n', '')
-                    html_line = "<h{}>{}</h{}>\n".format(
-                        count, html_replace, count)
-                    html.append(html_line)
-            file.writelines(html)
-            sys.exit(0)
+    # Get the input and output file names from the command-line arguments
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+
+    # Convert the Markdown file to the HTML and write the output to a file
+    convert_markdown_to_html(input_file, output_file)
+
+    # Exit  with a successful status code
+    sys.exit(0)
+
